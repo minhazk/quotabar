@@ -8,8 +8,8 @@
 ;; other CLIs they point nowhere:
 ;;   HELPER   /usr/bin/security (reads agy's sign-in from your keychain)
 ;;   KEYCHAINS ~/Library/Keychains     SHAREDTMP /private/tmp
-;; The CLI may start no program outside its own install folder — so no MCP server, hook or plugin
-;; configured anywhere can run — and can read or write nothing of yours but its own STATE folder.
+;; Executable paths outside the explicit allowlist are denied. Allowed interpreters and install
+;; subtrees remain trusted. State/temp access and Gemini exceptions are defined below.
 ;; Network stays open: the quota answer comes from the vendor. In SBPL the LAST matching rule wins.
 (version 1)
 (allow default)

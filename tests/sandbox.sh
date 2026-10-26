@@ -8,9 +8,13 @@ cd "$(dirname "$0")/.."
 SB=Resources/cli.sb
 real() { /usr/bin/python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$1"; }
 H="$(real "$HOME")"; STATE="$H/.quotabar-sandbox-test-$$"; PT="$(real "$(mktemp -d)")"
-mkdir -p "$STATE"; P=probe-$$
-echo x > "$STATE/$P"; echo x > "$H/$P"; echo x > "/private/tmp/$P"
-trap 'rm -rf "$STATE" "$H/$P" "$H/$P.new" "/private/tmp/$P" "$PT"' EXIT
+TEST_SHARED_DIR="$(mktemp -d /private/tmp/quotabar-sandbox.XXXXXX)"
+P=probe-$$
+trap 'rm -rf "$STATE" "$H/$P" "$H/$P.new" "$TEST_SHARED_DIR" "$PT"' EXIT
+mkdir -p "$STATE"
+# A private, unpredictable directory prevents other local accounts planting fixture symlinks.
+[[ "$(stat -f %Lp "$TEST_SHARED_DIR")" == 700 ]] || { echo "FAIL: temporary fixture directory is not private"; exit 1; }
+echo x > "$STATE/$P"; echo x > "$H/$P"; echo x > "$TEST_SHARED_DIR/$P"
 run() { /usr/bin/sandbox-exec -f "$SB" -D HOME="$H" -D EXEC=/bin/bash -D INTERP=/bin/bash -D EXECDIR=/nonexistent \
           -D STATE="$STATE" -D PTMP="$PT" -D HELPER=/nonexistent -D KEYCHAINS=/nonexistent \
           -D SHAREDTMP=/nonexistent /bin/bash -c "$1" 2>/dev/null; }
@@ -20,7 +24,7 @@ check denied  '/usr/bin/true'                   "start another program"
 check denied  ": < '$H/$P'"                     "read a file in ~"
 check denied  "echo y >> '$H/$P'"               "write a file in ~"
 check denied  "echo y > '$H/$P.new'"            "create a file in ~"
-check denied  ": < '/private/tmp/$P'"           "read shared /tmp"
+check denied  ": < '$TEST_SHARED_DIR/$P'"       "read shared /tmp"
 check allowed ": < '$STATE/$P'"                 "read its own state folder"
 check allowed "echo y >> '$STATE/$P'"           "write its own state folder"
 check allowed "echo y > '$PT/$P'"               "write QuotaBar's private temp"

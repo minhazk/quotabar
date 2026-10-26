@@ -144,7 +144,7 @@ enum CLI {
                              "\(home)/.npm-global/bin", "\(home)/.bun/bin", "\(home)/.volta/bin"]
     static let systemPath = ["/usr/bin", "/bin", "/usr/sbin", "/sbin"]
 
-    /// A private, empty working directory: no CLI ever runs inside a project and picks up its config.
+    /// A dedicated working directory outside projects. Existing contents are not cleared on each call.
     static let workDir: String = {
         let d = (NSTemporaryDirectory() as NSString).appendingPathComponent("quotabar-cwd")
         try? FileManager.default.createDirectory(atPath: d, withIntermediateDirectories: true,
@@ -170,7 +170,7 @@ enum CLI {
 
     /// Whether another local account could replace what we are about to run. The path, its resolved target
     /// and every directory above both, up to `/`, must be owned by this user or root, not writable by
-    /// "others", writable by group only for `admin` (who can sudo anyway), and carry no ACL entry that
+    /// "others", writable by group only for root/admin groups, and carry no ACL entry that
     /// grants anyone write access. A file that fails is never run.
     static func trusted(_ path: String) -> Bool {
         guard let rp = realpath(path, nil) else { return false }

@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: macos-15          # GitHub-hosted only; install.sh rejects builds from self-hosted runners
+    runs-on: macos-15          # GitHub-hosted release build
     permissions:
       contents: write          # create the release
     steps:

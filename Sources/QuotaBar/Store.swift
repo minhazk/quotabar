@@ -6,8 +6,8 @@ import Foundation
 /// - one CLI at a time on a serial queue, hard 20–40 s deadlines, whole process group killed;
 /// - a source is re-polled only when its own activity files moved since the last poll (or its reset time
 ///   passed), plus a slow safety interval; hovering refreshes anything older than 90 s;
-/// - Claude reads the opt-in statusline file for free and runs `claude -p /usage` at most every 20 min
-///   when that file is missing or stale;
+/// - Claude reads the opt-in statusline file locally and normally runs `claude -p /usage` every 20 min
+///   when that file is missing or stale; startup, wake and manual refresh can request it sooner;
 /// - paused while the Mac sleeps, refreshed on wake; last good values cached on disk, never shown as 0.
 final class Store: ObservableObject {
     @Published private(set) var snaps: [Vendor: Snapshot] = [:]

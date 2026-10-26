@@ -63,14 +63,14 @@ enum Fetch {
         return Snapshot(vendor: .claude, bar: week, windows: [week, five].compactMap { $0 }, measuredAt: date(o["at"]))
     }
 
-    /// Isolation for every `claude` call: user/project settings files ignored (so no hook from them),
+    /// Isolation flags for Claude `/usage` (not the separate `auth status` command):
     /// hooks off, no MCP server, no transcript saved, private empty cwd, allowlisted environment. `/usage`
     /// makes no model call. Verified by tests/claude-canary.sh: hooks and MCP servers fire without these
     /// flags and stay silent with them.
     static let claudeIsolation = ["--restricted", "--strict-mcp-config", "--no-session-persistence",
                                   "--settings", #"{"disableAllHooks":true,"language":"English"}"#]
 
-    /// `claude -p "/usage"` — no model call, but a full CLI start (~3 s CPU). Called at most every 20 min.
+    /// `claude -p "/usage"` queries quota, not model generation. Normal polling uses a 20-minute cooldown.
     static func claudeUsage() -> Snapshot {
         let (b, why) = binary(.claude)
         guard let bin = b else { return why! }
@@ -287,9 +287,9 @@ enum Paths {
 }
 
 /// The kernel sandbox (Resources/cli.sb, applied with sandbox-exec) every CLI except `claude` runs in
-/// the CLI may start only programs from its own install folder, may read and write nothing in your home
-/// folder but its own state folder, and nothing in other users' folders, mounted volumes or shared temp.
-/// So no MCP server, hook or plugin configured anywhere can start, and nothing else of yours is readable.
+/// Executable paths and home-folder access are restricted to the explicit profile permissions.
+/// Allowed interpreters and installation subtrees remain trusted; this is not a universal hook/MCP ban.
+/// Gemini additionally receives keychain and shared-temp access for its sign-in/helper.
 /// `claude` runs with its own isolation flags instead (Fetch.claudeIsolation, tests/claude-canary.sh).
 enum Sandbox {
     struct Box { let argv: [String]; let binary: String; let env: [String: String] }

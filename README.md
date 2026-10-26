@@ -66,9 +66,26 @@ QuotaBar retains LimitBar's collectors and process isolation:
 - Gemini: Antigravity CLI `agy -p /quota`.
 - Grok: Grok Build's billing RPC.
 
-Sign-in stays in the official CLI. QuotaBar does not directly open credential files, cookies, or keychain items. Codex, Gemini, and Grok run under the inherited kernel sandbox; Claude uses its isolation flags to disable hooks, configured MCP servers, and session persistence. CLI commands have deadlines and a restricted environment. Collectors and upstream CLI behavior can change; unreadable data appears as unavailable, never a fabricated allowance.
+Sign-in stays in the official CLI. QuotaBar does not directly open credential files, cookies, or keychain items. It does briefly read the tail of a recent Codex session log to select rate-limit records; it does not save the surrounding conversation. Claude's `auth status` answer includes account details, but QuotaBar keeps only the sign-in flag and plan name.
 
-The app stores only limit percentages, reset times, plan names, and fixed diagnostic strings in `~/Library/Caches/quotabar` (private folder and files). Internally the vendor's original `used` values are retained to avoid double inversion; display values are converted to remaining. No analytics or separate web service.
+Codex, Gemini, and Grok run under a kernel sandbox restricting executable paths and filesystem access. This still trusts their allowed interpreters, installation trees and own state folders; it is not a universal guarantee that every plugin or hook is blocked. Gemini additionally receives keychain and shared-temp access for its sign-in/helper. Network access remains available to the CLIs. Claude's `/usage` call uses CLI flags intended to disable hooks, configured MCP servers and session persistence, rather than the kernel sandbox. The separate `auth status` command uses the restricted environment and timeout but not those `/usage` flags.
+
+The app keeps projected quota snapshots in `~/Library/Caches/quotabar`: percentages, resets, vendor/state, plan names, window labels, notes, measurement times and fixed diagnostics. The optional status-line helper keeps accepted quota entries and reset values, not the complete input payload. The folder is private and new files use restricted permissions. Internally the vendor's original `used` values are retained; display values are converted to remaining. QuotaBar has no analytics client or separate backend; launched vendor CLIs retain their own network and account behavior.
+
+### Refresh schedule and usage cost
+
+The scheduler checks about every **30 seconds** (with timer tolerance); this is not a network poll every 30 seconds.
+
+| Source | Normal refresh behavior |
+| --- | --- |
+| Claude | Read the optional local status file frequently. If it is missing or over 20 minutes old, run `/usage` with a normal 20-minute cooldown. |
+| Codex | During local activity, check roughly once a minute. Reuse recent session-log quota records where possible; otherwise ask `account/rateLimits/read`. Idle safety interval: 30 minutes. |
+| Gemini / Grok | During activity, approximately every 5 minutes. Idle safety interval: 30 minutes. |
+| Missing or unsafe CLI | Look for it again after roughly 5 minutes. |
+
+Opening the panel can refresh non-Claude sources whose last poll is older than 90 seconds. Startup, wake and the Refresh button force polling and can bypass normal cooldowns; a fresh Claude status file is still reused. Collection pauses during sleep. This is a policy based on local activity and cached data, not a guaranteed live quota stream.
+
+These are allowance/billing metadata checks, not requests to generate an AI answer. Local file reads use no model tokens. Claude's built-in `/usage` and Codex's rate-limit read are intended to retrieve account metadata; a check of Claude Code 2.1.310 returned zero model turns, zero input/output tokens and zero reported cost. That observation is not a permanent guarantee about future CLI versions or vendor billing. The checks still use some CPU and network resources. See the [Claude status-line documentation](https://code.claude.com/docs/en/statusline) and [Codex app-server protocol](https://github.com/openai/codex/tree/main/codex-rs/app-server) for their data sources.
 
 Paths and preferences are separate from LimitBar: bundle ID `io.github.minhazk.quotabar`, cache `~/Library/Caches/quotabar`. Override a CLI path with, for example:
 
