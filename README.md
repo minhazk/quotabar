@@ -48,6 +48,15 @@ bash install.sh
 
 The installer builds this checkout, verifies the signature, preserves any previous QuotaBar bundle under a timestamped backup name, and opens the new app. It does not alter LimitBar, CLI sign-ins, or Claude settings. Enable Launch at Login from the installed app if desired. Releases are ad-hoc signed, not notarized.
 
+You can also manage the installed app's native macOS login item from Terminal:
+
+```sh
+/Applications/QuotaBar.app/Contents/MacOS/QuotaBar --enable-login
+/Applications/QuotaBar.app/Contents/MacOS/QuotaBar --login-status
+```
+
+An enabled registration prints `Launch at login: enabled`. If macOS reports `requiresApproval`, approve QuotaBar in System Settings → General → Login Items; the command does not bypass that approval.
+
 ## Usage sources and privacy
 
 QuotaBar retains LimitBar's collectors and process isolation:

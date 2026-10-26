@@ -1,7 +1,30 @@
 import AppKit
 import Foundation
+import ServiceManagement
 
 let args = CommandLine.arguments
+
+// Manage the same native login item as the panel toggle, including on a remote Mac.
+if args.contains("--enable-login") || args.contains("--login-status") {
+    do {
+        if args.contains("--enable-login"), SMAppService.mainApp.status != .enabled {
+            try SMAppService.mainApp.register()
+        }
+        let status: String
+        switch SMAppService.mainApp.status {
+        case .enabled: status = "enabled"
+        case .notRegistered: status = "notRegistered"
+        case .requiresApproval: status = "requiresApproval"
+        case .notFound: status = "notFound"
+        @unknown default: status = "unknown"
+        }
+        print("Launch at login: \(status)")
+        exit(args.contains("--enable-login") && status != "enabled" ? 2 : 0)
+    } catch {
+        fputs("Could not enable launch at login: \(error.localizedDescription)\n", stderr)
+        exit(1)
+    }
+}
 
 // `QuotaBar --probe` asks every CLI once and prints what quotabar would show, as JSON:
 // state (ok / missing / untrusted / signedOut / failed), plan, windows. Nothing else of the account.
