@@ -1,7 +1,7 @@
 import Foundation
 
 enum Vendor: String, CaseIterable, Codable {
-    case claude, gemini, codex, grok
+    case codex, claude, gemini, grok
 
     var name: String { ["claude": "Claude", "gemini": "Gemini", "codex": "Codex", "grok": "Grok"][rawValue]! }
     /// The CLI quotabar asks, and what the panel suggests when it is missing or signed out.
