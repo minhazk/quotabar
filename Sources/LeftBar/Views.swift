@@ -32,7 +32,7 @@ private func isStale(_ s: Snapshot?) -> Bool {
     return Date().timeIntervalSince(m) > staleAfter
 }
 
-// MARK: - Tray: mark + % used, no "%" sign, superscript w for weekly, red ≥ 90, "!"
+// MARK: - Tray: percent remaining, weekly Claude, red when 10% or less remains
 
 struct TrayView: View {
     @ObservedObject var store: Store
@@ -46,6 +46,9 @@ struct TrayView: View {
                         .interpolation(.high).frame(width: 13, height: 13)
                     digit(s)
                 }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(v.name), \(s?.displayWindow?.label ?? (v == .claude ? "Week" : "allowance")), \(percentText(s?.state == .ok ? s?.displayWindow?.remaining() : nil)) percent remaining")
+                .help("\(v.name): \(percentText(s?.state == .ok ? s?.displayWindow?.remaining() : nil))% left · \(s?.displayWindow?.label ?? (v == .claude ? "Week" : "allowance"))")
             }
         }
         .padding(.horizontal, 7)
@@ -54,10 +57,10 @@ struct TrayView: View {
     }
 
     private func digit(_ s: Snapshot?) -> some View {
-        let w = s?.state == .ok ? s?.bar : nil
-        let shown: Double? = (w == nil || w!.resetPassed) ? nil : w!.used
-        let crit = (shown ?? 0) >= 90
-        let weekly = w?.short == "w"
+        let w = s?.state == .ok ? s?.displayWindow : nil
+        let shown = w?.remaining()
+        let crit = shown.map { $0 <= 10 } ?? false
+        let weekly = w?.short == "w" || s?.vendor == .claude
         let bang = s?.otherHot ?? false
         var t = Text(percentText(shown))
             .font(.system(size: 13, weight: crit ? .semibold : .regular).monospacedDigit())
@@ -82,6 +85,13 @@ struct PanelView: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 30)) { _ in
             VStack(spacing: 0) {
+                HStack {
+                    Text("LeftBar").font(.system(size: 13, weight: .semibold))
+                    Spacer()
+                    Text("Allowance remaining").font(.system(size: 11)).foregroundStyle(.secondary)
+                }
+                .padding(.horizontal, 12).padding(.vertical, 9)
+                Hairline()
                 ForEach(Array(store.installed.enumerated()), id: \.element) { i, v in
                     if i > 0 { Hairline() }
                     VendorSection(vendor: v, snap: store.snaps[v], busy: store.busy.contains(v))
@@ -153,12 +163,16 @@ private struct VendorSection: View {
                 Spacer(minLength: 8)
                 Text(ageText).font(.system(size: 11)).foregroundStyle(.tertiary).padding(.top, 1)
             }
-            let windows = snap?.windows ?? []
-            ForEach(Array(windows.enumerated()), id: \.offset) { i, w in
+            let windows = snap?.displayWindows ?? []
+            ForEach(windows, id: \.id) { w in
                 MeterRow(window: w, vendor: vendor,
-                         style: i == 0 ? .primary : (w.label == "5-hour" || w.label == "Week" ? .normal : .quiet))
+                         style: w == windows.first ? .primary : (w.label == "5-hour" || w.label == "Week" ? .normal : .quiet))
                     .padding(.top, 7)
                     .opacity(isStale(snap) ? 0.48 : 1)
+            }
+            if vendor == .claude, snap?.state == .ok, snap?.displayWindow == nil {
+                Text("Weekly allowance unavailable — menu bar shows —")
+                    .font(.system(size: 11)).foregroundStyle(.secondary).padding(.top, 7)
             }
             if snap?.state == .signedOut {
                 Text("Signed out — \(vendor.loginHint)").font(.system(size: 12)).foregroundStyle(.secondary)
@@ -200,7 +214,7 @@ private struct VendorSection: View {
     }
 }
 
-/// CLIs that aren't installed: one quiet line, so the panel says what limitbar can read once they are.
+/// CLIs that aren't installed: one quiet line, so the panel says what leftbar can read once they are.
 private struct MissingRow: View {
     let vendors: [Vendor]
     var body: some View {
@@ -222,7 +236,8 @@ private struct MeterRow: View {
 
     var body: some View {
         let due = window.resetPassed
-        let hot = !due && (window.used ?? 0) >= 90
+        let remaining = window.remaining()
+        let hot = remaining.map { $0 <= 10 } ?? false
         HStack(alignment: .center, spacing: 8) {
             VStack(alignment: .leading, spacing: 1) {
                 Text(window.label).lineLimit(1).truncationMode(.tail)
@@ -231,17 +246,19 @@ private struct MeterRow: View {
                 Text(resetText(due)).font(.system(size: 11)).foregroundStyle(due ? .secondary : .tertiary)
             }
             .frame(width: 118, alignment: .leading)
-            if !due {
-                Track(fraction: (window.used ?? 0) / 100, height: style == .quiet ? 4 : 5, vendor: vendor, hot: hot)
+            if let remaining {
+                Track(fraction: remaining / 100, height: style == .quiet ? 4 : 5, vendor: vendor, hot: hot)
             } else {
                 Spacer()
             }
-            Text(due || window.used == nil ? "—" : percentText(window.used) + "%")
+            Text(remaining == nil ? "—" : percentText(remaining) + "%")
                 .font(.system(size: style == .quiet ? 12 : 13,
                               weight: hot ? .bold : style == .primary ? .semibold : .medium).monospacedDigit())
                 .foregroundStyle(hot ? Color.hot : (style == .quiet || due ? Color.secondary : Color.primary))
                 .frame(width: 40, alignment: .trailing)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(window.label), \(percentText(remaining)) percent remaining, \(resetText(due))")
     }
 
     private func resetText(_ due: Bool) -> String {

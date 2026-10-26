@@ -10,23 +10,20 @@ jobs:
     runs-on: macos-15          # GitHub-hosted only; install.sh rejects builds from self-hosted runners
     permissions:
       contents: write          # create the release
-      id-token: write          # sign the build provenance (Sigstore)
-      attestations: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: tag must match VERSION
         run: test "v$(cat VERSION)" = "$GITHUB_REF_NAME"
+      - run: swift test -j 2
       - run: scripts/build-app.sh build --universal
-      - run: tests/states.sh build/LimitBar.app
+      - run: tests/states.sh build/LeftBar.app
+      - run: tests/statusline.sh build/LeftBar.app
       - name: zip
         run: |
-          ditto -c -k --keepParent build/LimitBar.app "LimitBar-$(cat VERSION).zip"
-          shasum -a 256 "LimitBar-$(cat VERSION).zip" | tee SHA256SUMS
-      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-path: LimitBar-*.zip
+          ditto -c -k --keepParent build/LeftBar.app "LeftBar-$(cat VERSION).zip"
+          shasum -a 256 "LeftBar-$(cat VERSION).zip" | tee SHA256SUMS
       - name: publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -34,7 +31,7 @@ jobs:
           # This version's section of CHANGELOG.md, then the provenance line.
           awk -v v="## $(cat VERSION)" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md > notes.md
           test -s notes.md
-          printf '\nBuilt from commit %s by .github/workflows/release.yml on a GitHub-hosted runner. SHA-256: %s. Install with the command in the README; it verifies this digest.\n' \
+          printf '\nBuilt from commit %s by .github/workflows/release.yml on a GitHub-hosted runner. SHA-256: %s. SHA-256 is provided in SHA256SUMS.\n' \
             "$GITHUB_SHA" "$(cut -d' ' -f1 SHA256SUMS)" >> notes.md
-          gh release create "$GITHUB_REF_NAME" "LimitBar-$(cat VERSION).zip" SHA256SUMS \
-            --title "LimitBar $(cat VERSION)" --notes-file notes.md
+          gh release create "$GITHUB_REF_NAME" "LeftBar-$(cat VERSION).zip" SHA256SUMS \
+            --title "LeftBar $(cat VERSION)" --notes-file notes.md

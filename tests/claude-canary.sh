@@ -1,6 +1,6 @@
 #!/bin/bash
-# Proves limitbar's `claude` isolation on the installed Claude Code: a canary SessionStart hook, status
-# line and MCP server (user config + project .mcp.json) must FIRE without limitbar's flags (positive
+# Proves leftbar's `claude` isolation on the installed Claude Code: a canary SessionStart hook, status
+# line and MCP server (user config + project .mcp.json) must FIRE without leftbar's flags (positive
 # control) and stay SILENT with them. Uses a throwaway CLAUDE_CONFIG_DIR — your ~/.claude is not touched.
 # Costs nothing: `/usage` makes no model call.
 set -euo pipefail
@@ -25,7 +25,7 @@ fired=$(ls "$T/hits" | wc -l | tr -d ' ')
 echo "positive control: $fired canary hit(s) without isolation"
 rm -f "$T"/hits/*; rm -rf "$T/cfg/projects"
 
-# Exactly the flags in Sources/LimitBar/Fetchers.swift (claudeIsolation).
+# Exactly the flags in Sources/LeftBar/Fetchers.swift (claudeIsolation).
 CLAUDE_CONFIG_DIR="$T/cfg" claude -p /usage --output-format json --max-turns 1 --restricted --strict-mcp-config \
   --no-session-persistence --settings '{"disableAllHooks":true,"language":"English"}' >/dev/null 2>&1 || true
 CLAUDE_CONFIG_DIR="$T/cfg" claude auth status --json >/dev/null 2>&1 || true

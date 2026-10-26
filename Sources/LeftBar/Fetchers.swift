@@ -2,8 +2,8 @@ import Foundation
 
 /// Where each vendor's limits come from. Error texts are fixed strings of ours — a CLI's own error message
 /// is only matched against, never stored or shown, so nothing it says can end up in the cache.
-/// Every source is the vendor's own CLI (or a file limitbar's own
-/// statusline helper writes), so sign-in and token refresh stay inside the CLI — limitbar never opens a
+/// Every source is the vendor's own CLI (or a file leftbar's own
+/// statusline helper writes), so sign-in and token refresh stay inside the CLI — leftbar never opens a
 /// credential file, cookie or keychain item, and keeps nothing of an account but the plan name.
 enum Fetch {
     static let home = CLI.home
@@ -43,19 +43,24 @@ enum Fetch {
 
     // MARK: Claude — the statusline file (free) first; `claude -p /usage` only when it is stale.
 
-    /// Written by `LimitBar --statusline` when the user opted in (see README). Holds only the limits.
+    /// Written by `LeftBar --statusline` when the user opted in (see README). Holds only the limits.
     static let claudeFilePath = "\(Paths.cache)/claude-status.json"
 
     static func claudeFile() -> Snapshot? {
         guard let d = try? Data(contentsOf: URL(fileURLWithPath: claudeFilePath)),
-              let o = json(d), let limits = o["limits"] as? [String: Any] else { return nil }
+              let o = json(d) else { return nil }
+        return claudeFileSnapshot(o)
+    }
+
+    static func claudeFileSnapshot(_ o: [String: Any]) -> Snapshot? {
+        guard let limits = o["limits"] as? [String: Any] else { return nil }
         func win(_ k: String, _ label: String, _ short: String) -> Window? {
             guard let w = limits[k] as? [String: Any], let p = percent(w["percent"]) else { return nil }
             return Window(label: label, short: short, used: p, resetsAt: date(w["resets_at"]))
         }
         let five = win("five_hour", "5-hour", "5h"), week = win("seven_day", "Week", "w")
         guard five != nil || week != nil else { return nil }
-        return Snapshot(vendor: .claude, bar: five ?? week, windows: [five, week].compactMap { $0 }, measuredAt: date(o["at"]))
+        return Snapshot(vendor: .claude, bar: week, windows: [week, five].compactMap { $0 }, measuredAt: date(o["at"]))
     }
 
     /// Isolation for every `claude` call: user/project settings files ignored (so no hook from them),
@@ -76,6 +81,10 @@ enum Fetch {
             return .status(.claude, signedOutText(raw) ? .signedOut : .failed, signedOutText(raw) ? nil : "claude gave no usage (exit \(out.code))")
         }
         if signedOutText(text) { return .status(.claude, .signedOut) }
+        return claudeUsageSnapshot(text)
+    }
+
+    static func claudeUsageSnapshot(_ text: String) -> Snapshot {
         func line(_ title: String, _ label: String, _ short: String) -> Window? {
             let pat = NSRegularExpression.escapedPattern(for: title) + #":\s*(\d+(?:\.\d+)?)%\s*used(?:\s*·\s*resets\s+([^(\n]+?)\s*\(([^)]+)\))?"#
             guard let re = try? NSRegularExpression(pattern: pat),
@@ -99,7 +108,7 @@ enum Fetch {
             }
         }
         guard five != nil || week != nil else { return .status(.claude, .failed, "no plan limits in claude /usage (API key account?)") }
-        return Snapshot(vendor: .claude, bar: five ?? week, windows: [five, week].compactMap { $0 } + extra, measuredAt: Date())
+        return Snapshot(vendor: .claude, bar: week, windows: [week, five].compactMap { $0 } + extra, measuredAt: Date())
     }
 
     /// "Oct 21 at 9:10pm" / "Oct 24 at 11pm" in the given zone; the year is the next occurrence.
@@ -193,7 +202,7 @@ enum Fetch {
         guard let box = Sandbox.wrap(.codex, bin, ["app-server"]) else {
             return .status(.codex, .failed, "sandbox unavailable — codex not run")
         }
-        switch CLI.rpc(box.argv, binary: box.binary, initialize: ["clientInfo": ["name": "limitbar", "version": "1"]],
+        switch CLI.rpc(box.argv, binary: box.binary, initialize: ["clientInfo": ["name": "leftbar", "version": "1"]],
                        notify: "initialized", method: "account/rateLimits/read", extraEnv: box.env) {
         case .failed(let e):
             if let lbox = Sandbox.wrap(.codex, bin, ["login", "status"]),
@@ -260,9 +269,9 @@ enum Fetch {
 }
 
 enum Paths {
-    /// ~/Library/Caches/limitbar — 0700; everything limitbar writes lives here.
+    /// ~/Library/Caches/leftbar — 0700; everything leftbar writes lives here.
     static let cache: String = {
-        let d = "\(CLI.home)/Library/Caches/limitbar"
+        let d = "\(CLI.home)/Library/Caches/leftbar"
         try? FileManager.default.createDirectory(atPath: d, withIntermediateDirectories: true,
                                                  attributes: [.posixPermissions: 0o700])
         chmod(d, 0o700)
@@ -315,7 +324,7 @@ enum Sandbox {
         guard let start = CLI.launch(bin), let interp = start.first else { return nil }
         // agy signs in through /usr/bin/security and the keychain and talks to its helper over /tmp; every
         // other CLI gets none of that.
-        let none = "/nonexistent-limitbar"
+        let none = "/nonexistent-leftbar"
         let agy = v == .gemini
         let argv = ["/usr/bin/sandbox-exec", "-f", profile, "-D", "HOME=\(home)", "-D", "EXEC=\(bin)",
                     "-D", "INTERP=\(interp)", "-D", "EXECDIR=\(execDir)", "-D", "STATE=\(state)", "-D", "PTMP=\(tmp)",

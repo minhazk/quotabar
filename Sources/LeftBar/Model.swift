@@ -4,7 +4,7 @@ enum Vendor: String, CaseIterable, Codable {
     case claude, gemini, codex, grok
 
     var name: String { ["claude": "Claude", "gemini": "Gemini", "codex": "Codex", "grok": "Grok"][rawValue]! }
-    /// The CLI limitbar asks, and what the panel suggests when it is missing or signed out.
+    /// The CLI leftbar asks, and what the panel suggests when it is missing or signed out.
     var cli: String { ["claude": "claude", "gemini": "agy", "codex": "codex", "grok": "grok"][rawValue]! }
     var product: String {
         ["claude": "Claude Code", "gemini": "Google Antigravity CLI", "codex": "Codex CLI", "grok": "Grok Build"][rawValue]!
@@ -32,8 +32,16 @@ struct Window: Codable, Equatable {
     var used: Double?
     var resetsAt: Date?
 
+    var id: String { label + ":" + short }
+
     /// The reset time has passed since we read it: the old percent is obsolete, not "0 %".
     var resetPassed: Bool { (resetsAt.map { $0 < Date() }) ?? false }
+
+    /// Missing or expired readings are unknown; a reset alone does not prove a full allowance.
+    func remaining(at now: Date = Date()) -> Double? {
+        guard let used = percent(used), resetsAt.map({ $0 > now }) ?? true else { return nil }
+        return 100 - used
+    }
 }
 
 struct Snapshot: Codable, Equatable {
@@ -46,9 +54,20 @@ struct Snapshot: Codable, Equatable {
     var measuredAt: Date?         // when the vendor's numbers were taken (not when we looked)
     var error: String?            // last failure, shown dimmed; previous numbers are kept
 
+    /// Claude always means the all-model weekly allowance, including when loading an old cache.
+    /// A missing weekly reading must never silently substitute the five-hour allowance.
+    var displayWindow: Window? {
+        vendor == .claude ? windows.first { $0.label == "Week" && $0.short == "w" } : bar
+    }
+
+    var displayWindows: [Window] {
+        guard let preferred = displayWindow else { return windows }
+        return [preferred] + windows.filter { $0 != preferred }
+    }
+
     /// Any window of this vendor at ≥ 90 % other than the one in the bar → "!" next to the digit.
     var otherHot: Bool {
-        windows.contains { $0 != bar && !$0.resetPassed && ($0.used ?? 0) >= 90 }
+        windows.contains { $0 != displayWindow && ($0.remaining().map { $0 <= 10 } ?? false) }
     }
 
     static func status(_ v: Vendor, _ state: VendorState, _ error: String? = nil) -> Snapshot {
@@ -71,7 +90,8 @@ func percent(_ any: Any?) -> Double? {
 
 /// Bar digit: rounded, but 99.6 % must never read as 100 %.
 func percentText(_ v: Double?) -> String {
-    guard let v = v else { return "—" }
+    guard let v = percent(v) else { return "—" }
+    if v > 0 && v < 1 { return "<1" }
     let r = v.rounded()
     return String(Int(r >= 100 && v < 100 ? 99 : r))
 }

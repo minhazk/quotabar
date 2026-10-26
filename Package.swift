@@ -1,16 +1,17 @@
 // swift-tools-version:6.0
-// LimitBar — a macOS menu bar app with the usage limits of your AI coding CLIs.
+// LeftBar — a macOS menu bar app with the usage limits of your AI coding CLIs.
 // Build the app: scripts/build-app.sh <out-dir>
 import PackageDescription
 
 let package = Package(
-    name: "LimitBar",
+    name: "LeftBar",
     platforms: [.macOS(.v14)],
     targets: [
         .executableTarget(
-            name: "LimitBar",
-            path: "Sources/LimitBar",
+            name: "LeftBar",
+            path: "Sources/LeftBar",
             swiftSettings: [.swiftLanguageMode(.v5)]
-        )
+        ),
+        .testTarget(name: "LeftBarTests", dependencies: ["LeftBar"], path: "tests/LeftBarTests")
     ]
 )

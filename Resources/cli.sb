@@ -1,9 +1,9 @@
-;; cli.sb — the macOS Seatbelt profile LimitBar runs codex, agy and grok under (sandbox-exec), to ask each
-;; one a single quota question. Parameters (set by Sandbox.wrap in Sources/LimitBar/Fetchers.swift):
+;; cli.sb — the macOS Seatbelt profile LeftBar runs codex, agy and grok under (sandbox-exec), to ask each
+;; one a single quota question. Parameters (set by Sandbox.wrap in Sources/LeftBar/Fetchers.swift):
 ;;   HOME     your home folder            STATE   the CLI's own folder (~/.codex, ~/.gemini, ~/.grok)
 ;;   EXEC     the CLI's executable        EXECDIR the CLI's own install folder
 ;;   INTERP   its interpreter, if it is a script (else = EXEC)
-;;   PTMP     LimitBar's private 0700 temp folder (the CLI's working directory and TMPDIR)
+;;   PTMP     LeftBar's private 0700 temp folder (the CLI's working directory and TMPDIR)
 ;; Only for agy (Google Antigravity), which needs them to sign in and to reach its local helper; for the
 ;; other CLIs they point nowhere:
 ;;   HELPER   /usr/bin/security (reads agy's sign-in from your keychain)
@@ -26,7 +26,7 @@
 ;; stat() of any path stays allowed — Node and Go resolve real paths component by component. It gives
 ;; existence, type and size of a path the CLI already knows; no file contents, no directory listings.
 (allow file-read-metadata)
-;; ... except the CLI's own state, install folder and LimitBar's private temp
+;; ... except the CLI's own state, install folder and LeftBar's private temp
 (allow file-read* file-write* (subpath (param "STATE")) (subpath (param "PTMP")))
 (allow file-read* (subpath (param "EXECDIR")) (literal (param "EXEC")) (literal (param "INTERP")))
 

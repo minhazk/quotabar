@@ -3,7 +3,7 @@ import Foundation
 
 let args = CommandLine.arguments
 
-// `LimitBar --probe` asks every CLI once and prints what limitbar would show, as JSON:
+// `LeftBar --probe` asks every CLI once and prints what leftbar would show, as JSON:
 // state (ok / missing / untrusted / signedOut / failed), plan, windows. Nothing else of the account.
 if args.contains("--probe") {
     let enc = JSONEncoder()
@@ -28,9 +28,9 @@ if args.contains("--probe") {
     exit(0)
 }
 
-// `LimitBar --statusline` — optional Claude Code status line (see README). Claude Code pipes a JSON blob
+// `LeftBar --statusline` — optional Claude Code status line (see README). Claude Code pipes a JSON blob
 // with the current rate limits to it on every refresh; we keep only the limits, in
-// ~/Library/Caches/limitbar/claude-status.json, and print one short line, e.g. "5h 23% · 7d 41%".
+// ~/Library/Caches/leftbar/claude-status.json, and print one short line, e.g. "5h 23% · 7d 41%".
 // The menu bar then reads Claude's numbers for free instead of running `claude -p /usage`.
 if args.contains("--statusline") {
     let input = FileHandle.standardInput.readDataToEndOfFile()
@@ -49,9 +49,11 @@ if args.contains("--statusline") {
        let d = try? JSONSerialization.data(withJSONObject: ["at": Date().timeIntervalSince1970, "limits": limits]) {
         Paths.write(d, to: Fetch.claudeFilePath)
     }
-    let parts = [("five_hour", "5h"), ("seven_day", "7d")].compactMap { k, label -> String? in
+    let parts = [("seven_day", "7d"), ("five_hour", "5h")].compactMap { k, label -> String? in
         guard let p = (limits[k] as? [String: Any])?["percent"] as? Double else { return nil }
-        return "\(label) \(percentText(p))%"
+        let reset = Fetch.date((limits[k] as? [String: Any])?["resets_at"])
+        let window = Window(label: label, short: label, used: p, resetsAt: reset)
+        return "\(label) \(percentText(window.remaining()))% left"
     }
     let model = ((blob["model"] as? [String: Any])?["display_name"] as? String) ?? "Claude"
     print(([model] + parts).joined(separator: " · "))
