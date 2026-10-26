@@ -2,7 +2,7 @@
 
 ## 0.1.0
 
-- First LeftBar version, derived from LimitBar 1.0.3.
+- First QuotaBar version, derived from LimitBar 1.0.3.
 - Claude's menu bar value shows the all-model weekly allowance.
 - All displayed percentages and meter fills show allowance remaining.
 - Weekly Claude rows lead the dropdown; missing weekly readings never substitute the session limit.

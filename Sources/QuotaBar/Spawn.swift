@@ -146,7 +146,7 @@ enum CLI {
 
     /// A private, empty working directory: no CLI ever runs inside a project and picks up its config.
     static let workDir: String = {
-        let d = (NSTemporaryDirectory() as NSString).appendingPathComponent("leftbar-cwd")
+        let d = (NSTemporaryDirectory() as NSString).appendingPathComponent("quotabar-cwd")
         try? FileManager.default.createDirectory(atPath: d, withIntermediateDirectories: true,
                                                  attributes: [.posixPermissions: 0o700])
         return d
@@ -154,7 +154,7 @@ enum CLI {
 
     enum Found { case ok(String), missing, untrusted(String) }
 
-    /// The executable for `name`: an explicit path from `defaults write io.github.minhazk.leftbar <name>Path
+    /// The executable for `name`: an explicit path from `defaults write io.github.minhazk.quotabar <name>Path
     /// /abs/path` first, then the fixed search path. Only files that pass `trusted` are ever run.
     static func find(_ name: String) -> Found {
         if let p = UserDefaults.standard.string(forKey: "\(name)Path"), p.hasPrefix("/") {

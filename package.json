@@ -1,5 +1,5 @@
 {
-  "name": "leftbar",
+  "name": "quotabar",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@11.21.0",
@@ -7,6 +7,6 @@
     "build": "scripts/build-app.sh build",
     "start": "script/build_and_run.sh --verify",
     "test": "swift test -j 2",
-    "test:integration": "tests/states.sh build/LeftBar.app && tests/statusline.sh build/LeftBar.app && tests/sandbox.sh"
+    "test:integration": "tests/states.sh build/QuotaBar.app && tests/statusline.sh build/QuotaBar.app && tests/sandbox.sh"
   }
 }

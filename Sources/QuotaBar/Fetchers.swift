@@ -2,8 +2,8 @@ import Foundation
 
 /// Where each vendor's limits come from. Error texts are fixed strings of ours — a CLI's own error message
 /// is only matched against, never stored or shown, so nothing it says can end up in the cache.
-/// Every source is the vendor's own CLI (or a file leftbar's own
-/// statusline helper writes), so sign-in and token refresh stay inside the CLI — leftbar never opens a
+/// Every source is the vendor's own CLI (or a file quotabar's own
+/// statusline helper writes), so sign-in and token refresh stay inside the CLI — quotabar never opens a
 /// credential file, cookie or keychain item, and keeps nothing of an account but the plan name.
 enum Fetch {
     static let home = CLI.home
@@ -43,7 +43,7 @@ enum Fetch {
 
     // MARK: Claude — the statusline file (free) first; `claude -p /usage` only when it is stale.
 
-    /// Written by `LeftBar --statusline` when the user opted in (see README). Holds only the limits.
+    /// Written by `QuotaBar --statusline` when the user opted in (see README). Holds only the limits.
     static let claudeFilePath = "\(Paths.cache)/claude-status.json"
 
     static func claudeFile() -> Snapshot? {
@@ -202,7 +202,7 @@ enum Fetch {
         guard let box = Sandbox.wrap(.codex, bin, ["app-server"]) else {
             return .status(.codex, .failed, "sandbox unavailable — codex not run")
         }
-        switch CLI.rpc(box.argv, binary: box.binary, initialize: ["clientInfo": ["name": "leftbar", "version": "1"]],
+        switch CLI.rpc(box.argv, binary: box.binary, initialize: ["clientInfo": ["name": "quotabar", "version": "1"]],
                        notify: "initialized", method: "account/rateLimits/read", extraEnv: box.env) {
         case .failed(let e):
             if let lbox = Sandbox.wrap(.codex, bin, ["login", "status"]),
@@ -269,9 +269,9 @@ enum Fetch {
 }
 
 enum Paths {
-    /// ~/Library/Caches/leftbar — 0700; everything leftbar writes lives here.
+    /// ~/Library/Caches/quotabar — 0700; everything quotabar writes lives here.
     static let cache: String = {
-        let d = "\(CLI.home)/Library/Caches/leftbar"
+        let d = "\(CLI.home)/Library/Caches/quotabar"
         try? FileManager.default.createDirectory(atPath: d, withIntermediateDirectories: true,
                                                  attributes: [.posixPermissions: 0o700])
         chmod(d, 0o700)
@@ -324,7 +324,7 @@ enum Sandbox {
         guard let start = CLI.launch(bin), let interp = start.first else { return nil }
         // agy signs in through /usr/bin/security and the keychain and talks to its helper over /tmp; every
         // other CLI gets none of that.
-        let none = "/nonexistent-leftbar"
+        let none = "/nonexistent-quotabar"
         let agy = v == .gemini
         let argv = ["/usr/bin/sandbox-exec", "-f", profile, "-D", "HOME=\(home)", "-D", "EXEC=\(bin)",
                     "-D", "INTERP=\(interp)", "-D", "EXECDIR=\(execDir)", "-D", "STATE=\(state)", "-D", "PTMP=\(tmp)",

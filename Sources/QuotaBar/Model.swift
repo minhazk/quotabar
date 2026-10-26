@@ -4,7 +4,7 @@ enum Vendor: String, CaseIterable, Codable {
     case claude, gemini, codex, grok
 
     var name: String { ["claude": "Claude", "gemini": "Gemini", "codex": "Codex", "grok": "Grok"][rawValue]! }
-    /// The CLI leftbar asks, and what the panel suggests when it is missing or signed out.
+    /// The CLI quotabar asks, and what the panel suggests when it is missing or signed out.
     var cli: String { ["claude": "claude", "gemini": "agy", "codex": "codex", "grok": "grok"][rawValue]! }
     var product: String {
         ["claude": "Claude Code", "gemini": "Google Antigravity CLI", "codex": "Codex CLI", "grok": "Grok Build"][rawValue]!

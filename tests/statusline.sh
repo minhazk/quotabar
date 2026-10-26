@@ -1,8 +1,8 @@
 #!/bin/bash
 # Test fixture output while denying ALL file writes, preserving real user caches.
 set -euo pipefail
-APP="${1:?usage: tests/statusline.sh <LeftBar.app>}"
-BIN="$APP/Contents/MacOS/LeftBar"
+APP="${1:?usage: tests/statusline.sh <QuotaBar.app>}"
+BIN="$APP/Contents/MacOS/QuotaBar"
 check() {
   local got
   got="$(printf '%s' "$1" | sandbox-exec -p '(version 1)(allow default)(deny file-write*)' "$BIN" --statusline)"

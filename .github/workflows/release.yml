@@ -18,12 +18,12 @@ jobs:
         run: test "v$(cat VERSION)" = "$GITHUB_REF_NAME"
       - run: swift test -j 2
       - run: scripts/build-app.sh build --universal
-      - run: tests/states.sh build/LeftBar.app
-      - run: tests/statusline.sh build/LeftBar.app
+      - run: tests/states.sh build/QuotaBar.app
+      - run: tests/statusline.sh build/QuotaBar.app
       - name: zip
         run: |
-          ditto -c -k --keepParent build/LeftBar.app "LeftBar-$(cat VERSION).zip"
-          shasum -a 256 "LeftBar-$(cat VERSION).zip" | tee SHA256SUMS
+          ditto -c -k --keepParent build/QuotaBar.app "QuotaBar-$(cat VERSION).zip"
+          shasum -a 256 "QuotaBar-$(cat VERSION).zip" | tee SHA256SUMS
       - name: publish
         env:
           GH_TOKEN: ${{ github.token }}
@@ -33,5 +33,5 @@ jobs:
           test -s notes.md
           printf '\nBuilt from commit %s by .github/workflows/release.yml on a GitHub-hosted runner. SHA-256: %s. SHA-256 is provided in SHA256SUMS.\n' \
             "$GITHUB_SHA" "$(cut -d' ' -f1 SHA256SUMS)" >> notes.md
-          gh release create "$GITHUB_REF_NAME" "LeftBar-$(cat VERSION).zip" SHA256SUMS \
-            --title "LeftBar $(cat VERSION)" --notes-file notes.md
+          gh release create "$GITHUB_REF_NAME" "QuotaBar-$(cat VERSION).zip" SHA256SUMS \
+            --title "QuotaBar $(cat VERSION)" --notes-file notes.md

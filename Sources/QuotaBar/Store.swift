@@ -13,7 +13,7 @@ final class Store: ObservableObject {
     @Published private(set) var snaps: [Vendor: Snapshot] = [:]
     @Published private(set) var busy: Set<Vendor> = []
 
-    private let queue = DispatchQueue(label: "leftbar.fetch", qos: .utility)
+    private let queue = DispatchQueue(label: "quotabar.fetch", qos: .utility)
     private var timer: Timer?
     private var asleep = false
     private var lastPoll: [Vendor: Date] = [:]

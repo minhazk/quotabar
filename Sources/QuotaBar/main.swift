@@ -3,7 +3,7 @@ import Foundation
 
 let args = CommandLine.arguments
 
-// `LeftBar --probe` asks every CLI once and prints what leftbar would show, as JSON:
+// `QuotaBar --probe` asks every CLI once and prints what quotabar would show, as JSON:
 // state (ok / missing / untrusted / signedOut / failed), plan, windows. Nothing else of the account.
 if args.contains("--probe") {
     let enc = JSONEncoder()
@@ -28,9 +28,9 @@ if args.contains("--probe") {
     exit(0)
 }
 
-// `LeftBar --statusline` — optional Claude Code status line (see README). Claude Code pipes a JSON blob
+// `QuotaBar --statusline` — optional Claude Code status line (see README). Claude Code pipes a JSON blob
 // with the current rate limits to it on every refresh; we keep only the limits, in
-// ~/Library/Caches/leftbar/claude-status.json, and print one short line, e.g. "5h 23% · 7d 41%".
+// ~/Library/Caches/quotabar/claude-status.json, and print one short line, e.g. "5h 23% · 7d 41%".
 // The menu bar then reads Claude's numbers for free instead of running `claude -p /usage`.
 if args.contains("--statusline") {
     let input = FileHandle.standardInput.readDataToEndOfFile()

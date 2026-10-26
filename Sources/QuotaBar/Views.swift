@@ -86,7 +86,7 @@ struct PanelView: View {
         TimelineView(.periodic(from: .now, by: 30)) { _ in
             VStack(spacing: 0) {
                 HStack {
-                    Text("LeftBar").font(.system(size: 13, weight: .semibold))
+                    Text("QuotaBar").font(.system(size: 13, weight: .semibold))
                     Spacer()
                     Text("Allowance remaining").font(.system(size: 11)).foregroundStyle(.secondary)
                 }
@@ -214,7 +214,7 @@ private struct VendorSection: View {
     }
 }
 
-/// CLIs that aren't installed: one quiet line, so the panel says what leftbar can read once they are.
+/// CLIs that aren't installed: one quiet line, so the panel says what quotabar can read once they are.
 private struct MissingRow: View {
     let vendors: [Vendor]
     var body: some View {

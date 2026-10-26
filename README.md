@@ -1,4 +1,4 @@
-# LeftBar
+# QuotaBar
 
 **How much AI coding allowance you have left, in your macOS menu bar.**
 
@@ -46,39 +46,39 @@ To install the built app in Applications:
 bash install.sh
 ```
 
-The installer builds this checkout, verifies the signature, preserves any previous LeftBar bundle under a timestamped backup name, and opens the new app. It does not alter LimitBar, CLI sign-ins, or Claude settings. Enable Launch at Login from the installed app if desired. Releases are ad-hoc signed, not notarized.
+The installer builds this checkout, verifies the signature, preserves any previous QuotaBar bundle under a timestamped backup name, and opens the new app. It does not alter LimitBar, CLI sign-ins, or Claude settings. Enable Launch at Login from the installed app if desired. Releases are ad-hoc signed, not notarized.
 
 ## Usage sources and privacy
 
-LeftBar retains LimitBar's collectors and process isolation:
+QuotaBar retains LimitBar's collectors and process isolation:
 
 - Claude: `claude auth status --json` plus isolated `claude -p /usage`, or the optional status line helper below.
 - Codex: rate-limit records in recent local sessions, with the official `codex app-server` rate-limit method as fallback.
 - Gemini: Antigravity CLI `agy -p /quota`.
 - Grok: Grok Build's billing RPC.
 
-Sign-in stays in the official CLI. LeftBar does not directly open credential files, cookies, or keychain items. Codex, Gemini, and Grok run under the inherited kernel sandbox; Claude uses its isolation flags to disable hooks, configured MCP servers, and session persistence. CLI commands have deadlines and a restricted environment. Collectors and upstream CLI behavior can change; unreadable data appears as unavailable, never a fabricated allowance.
+Sign-in stays in the official CLI. QuotaBar does not directly open credential files, cookies, or keychain items. Codex, Gemini, and Grok run under the inherited kernel sandbox; Claude uses its isolation flags to disable hooks, configured MCP servers, and session persistence. CLI commands have deadlines and a restricted environment. Collectors and upstream CLI behavior can change; unreadable data appears as unavailable, never a fabricated allowance.
 
-The app stores only limit percentages, reset times, plan names, and fixed diagnostic strings in `~/Library/Caches/leftbar` (private folder and files). Internally the vendor's original `used` values are retained to avoid double inversion; display values are converted to remaining. No analytics or separate web service.
+The app stores only limit percentages, reset times, plan names, and fixed diagnostic strings in `~/Library/Caches/quotabar` (private folder and files). Internally the vendor's original `used` values are retained to avoid double inversion; display values are converted to remaining. No analytics or separate web service.
 
-Paths and preferences are separate from LimitBar: bundle ID `io.github.minhazk.leftbar`, cache `~/Library/Caches/leftbar`. Override a CLI path with, for example:
+Paths and preferences are separate from LimitBar: bundle ID `io.github.minhazk.quotabar`, cache `~/Library/Caches/quotabar`. Override a CLI path with, for example:
 
 ```sh
-defaults write io.github.minhazk.leftbar codexPath /full/path/to/codex
+defaults write io.github.minhazk.quotabar codexPath /full/path/to/codex
 ```
 
 ### Optional Claude status line
 
-If your Claude Code version sends `rate_limits` in its status-line payload, LeftBar can read those without launching `/usage`. Merge this into your existing Claude settings only if you want to replace your status line:
+If your Claude Code version sends `rate_limits` in its status-line payload, QuotaBar can read those without launching `/usage`. Merge this into your existing Claude settings only if you want to replace your status line:
 
 ```json
 "statusLine": {
   "type": "command",
-  "command": "/Applications/LeftBar.app/Contents/MacOS/LeftBar --statusline"
+  "command": "/Applications/QuotaBar.app/Contents/MacOS/QuotaBar --statusline"
 }
 ```
 
-Example output: `Claude Opus · 7d 59% left · 5h 77% left`. The helper saves only quota percentages and reset times, not the surrounding payload. LeftBar does not edit Claude settings automatically.
+Example output: `Claude Opus · 7d 59% left · 5h 77% left`. The helper saves only quota percentages and reset times, not the surrounding payload. QuotaBar does not edit Claude settings automatically.
 
 ## Verification
 
@@ -91,10 +91,10 @@ tests/claude-canary.sh
 
 The Swift tests cover full/partial/empty allowance, invalid and expired data, rounding, weekly selection from old caches, missing weekly data, and secondary-limit warnings. Integration tests cover CLI missing/signed-out/untrusted states, the status-line helper, and the inherited sandbox.
 
-`build/LeftBar.app/Contents/MacOS/LeftBar --probe` reads live collectors and prints vendor snapshots. This diagnostic JSON retains source `used` percentages; the app displays remaining.
+`build/QuotaBar.app/Contents/MacOS/QuotaBar --probe` reads live collectors and prints vendor snapshots. This diagnostic JSON retains source `used` percentages; the app displays remaining.
 
 ## Attribution and licence
 
-Derived from [dancik/limitbar](https://github.com/dancik/limitbar) at commit `e7a830a60fe678641cca7960209c14087bf1f86a`. Original copyright and MIT licence are retained in [LICENSE](LICENSE). LeftBar modifications are also MIT licensed. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for icon credits.
+Derived from [dancik/limitbar](https://github.com/dancik/limitbar) at commit `e7a830a60fe678641cca7960209c14087bf1f86a`. Original copyright and MIT licence are retained in [LICENSE](LICENSE). QuotaBar modifications are also MIT licensed. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for icon credits.
 
-Service names and marks belong to their owners. LeftBar is not affiliated with Anthropic, Google, OpenAI, xAI, or the LimitBar project.
+Service names and marks belong to their owners. QuotaBar is not affiliated with Anthropic, Google, OpenAI, xAI, or the LimitBar project.

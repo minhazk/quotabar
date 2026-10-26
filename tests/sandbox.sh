@@ -7,7 +7,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 SB=Resources/cli.sb
 real() { /usr/bin/python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$1"; }
-H="$(real "$HOME")"; STATE="$H/.leftbar-sandbox-test-$$"; PT="$(real "$(mktemp -d)")"
+H="$(real "$HOME")"; STATE="$H/.quotabar-sandbox-test-$$"; PT="$(real "$(mktemp -d)")"
 mkdir -p "$STATE"; P=probe-$$
 echo x > "$STATE/$P"; echo x > "$H/$P"; echo x > "/private/tmp/$P"
 trap 'rm -rf "$STATE" "$H/$P" "$H/$P.new" "/private/tmp/$P" "$PT"' EXIT
@@ -23,5 +23,5 @@ check denied  "echo y > '$H/$P.new'"            "create a file in ~"
 check denied  ": < '/private/tmp/$P'"           "read shared /tmp"
 check allowed ": < '$STATE/$P'"                 "read its own state folder"
 check allowed "echo y >> '$STATE/$P'"           "write its own state folder"
-check allowed "echo y > '$PT/$P'"               "write LeftBar's private temp"
+check allowed "echo y > '$PT/$P'"               "write QuotaBar's private temp"
 [[ $fail -eq 0 ]] && echo "PASS: cli.sb" || { echo "cli.sb FAILED"; exit 1; }

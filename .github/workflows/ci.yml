@@ -31,10 +31,10 @@ jobs:
       - run: bash -n install.sh
       - run: swift test -j 2
       - run: scripts/build-app.sh build --universal
-      - run: tests/states.sh build/LeftBar.app
-      - run: tests/statusline.sh build/LeftBar.app
+      - run: tests/states.sh build/QuotaBar.app
+      - run: tests/statusline.sh build/QuotaBar.app
       - run: tests/sandbox.sh
       - name: fresh machine — no AI CLI installed, all four must read "missing"
         run: |
-          build/LeftBar.app/Contents/MacOS/LeftBar --probe | tee probe.json
+          build/QuotaBar.app/Contents/MacOS/QuotaBar --probe | tee probe.json
           /usr/bin/python3 -c 'import json; d=json.load(open("probe.json")); bad={k:v["state"] for k,v in d.items() if v["state"]!="missing"}; assert not bad, bad'

@@ -1,5 +1,5 @@
 import XCTest
-@testable import LeftBar
+@testable import QuotaBar
 
 final class AllowanceTests: XCTestCase {
     private let now = Date(timeIntervalSince1970: 2_000_000_000)

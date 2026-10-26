@@ -1,9 +1,9 @@
 #!/bin/bash
 # What a user sees with each CLI missing, signed out or unsafe — with fake CLIs, so it needs no account
-# and never touches real sessions. Usage: tests/states.sh <path to LeftBar.app>
+# and never touches real sessions. Usage: tests/states.sh <path to QuotaBar.app>
 set -euo pipefail
-APP="${1:?usage: tests/states.sh <LeftBar.app>}"
-BIN="$APP/Contents/MacOS/LeftBar"
+APP="${1:?usage: tests/states.sh <QuotaBar.app>}"
+BIN="$APP/Contents/MacOS/QuotaBar"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 
 # Signed-out fakes, written the way each real CLI reports it.

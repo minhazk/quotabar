@@ -32,7 +32,7 @@ final class AppDelegate: NSResponder, NSApplicationDelegate {   // NSResponder: 
                                      tray.centerYAnchor.constraint(equalTo: button.centerYAnchor)])
         button.target = self
         button.action = #selector(clicked)
-        button.setAccessibilityLabel("LeftBar — AI allowance remaining")
+        button.setAccessibilityLabel("QuotaBar — AI allowance remaining")
         button.addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
                                               owner: self, userInfo: ["zone": "item"]))
         resizeItem()
